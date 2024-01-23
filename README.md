@@ -34,7 +34,7 @@ Ubuntu 16.04:
 ```
 sudo apt update
 sudo apt upgrade
-sudo apt install build-essential cmake ninja-build python nodejs-legacy libncurses-dev unzip libboost1.58-tools-dev
+sudo apt install -y build-essential cmake ninja-build python3 nodejs libncurses-dev unzip libboost-all-dev
 ```
 
 ## Building WASM binaries

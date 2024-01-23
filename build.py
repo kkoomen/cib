@@ -20,7 +20,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import argparse, os, subprocess, sys
+import argparse, os, subprocess, sys, re
 from urllib.parse import urlparse
 
 useTag = 'cib-013'      # --clone and --checkout retrieve this tag
@@ -167,7 +167,7 @@ repos = [
     # ('repos/fastcomp', 'tbfleming/cib-emscripten-fastcomp.git', 'kripken/emscripten-fastcomp.git', True, 'incoming', 'incoming'),
     # ('repos/fastcomp/tools/clang', 'tbfleming/cib-emscripten-fastcomp-clang.git', 'kripken/emscripten-fastcomp-clang.git', True, 'incoming', 'incoming'),
     ('repos/emscripten', 'tbfleming/cib-emscripten.git', 'kripken/emscripten.git', True, 'incoming', 'cib'),
-    ('repos/wabt', 'WebAssembly/wabt.git', 'WebAssembly/wabt.git', False, 'master', 'master'),
+    ('repos/wabt', 'WebAssembly/wabt.git', 'WebAssembly/wabt.git', False, 'main', 'main'),
     ('repos/binaryen', 'tbfleming/cib-binaryen.git', 'WebAssembly/binaryen.git', True, 'master', 'cib'),
     ('repos/zip.js', 'gildas-lormeau/zip.js.git', 'gildas-lormeau/zip.js.git', False, '3e7920810f63d5057ef6028833243105521da369', '3e7920810f63d5057ef6028833243105521da369'),
     ('repos/eos', 'tbfleming/cib-eos.git', 'EOSIO/eos.git', True, 'dawn-v3.0.0', 'cib'),
@@ -185,6 +185,9 @@ def format():
     run('chmod a-x *.md .gitignore src/*.h src/*.cpp src/*.js src/*.html src/*.txt src/rtl/*')
     run('chmod a-x src/eos/.gitignore src/eos/package.json src/eos/src/*')
 
+def is_commit_hash(commit_hash):
+    return re.match(r'^[0-9a-f]{40}$', commit_hash)
+
 def clone():
     for (path, url, upstream, isPushable, upstreamBranch, branch) in repos:
         if os.path.isdir(path):
@@ -194,9 +197,12 @@ def clone():
         dir = os.path.dirname(path)
         base = os.path.basename(path)
         run('mkdir -p ' + dir)
-        run('cd ' + dir + ' && git clone ' + gitProtocol + url + ' ' + base)
+        if is_commit_hash(branch):
+            run('cd ' + dir + ' && git clone ' + gitProtocol + url + ' ' + base)
+            run('cd ' + path + ' git checkout ' + branch)
+        else:
+            run('cd ' + dir + ' && git clone --branch ' + branch + ' --depth 1 ' + gitProtocol + url + ' ' + base)
         run('cd ' + path + ' && git remote add upstream ' + gitProtocol + upstream)
-        run('cd ' + path + ' && git checkout ' + branch)
 
 def status():
     for (path, url, upstream, isPushable, upstreamBranch, branch) in repos:
